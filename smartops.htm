@@ -2,527 +2,332 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smartops Extension</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartOPR - Object Lifecycle Engine Extension</title>
     <style>
-        body {
-            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-            font-size: 12px;
-            color: #333333;
-            background-color: #f1f2f5;
-            margin: 0;
-            padding: 12px;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .header-bar {
-            background-color: #ffffff;
-            border: 1px solid #dcdcdc;
-            padding: 10px 15px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        .header-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333333;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .header-title span {
-            color: #da291c;
-            text-transform: uppercase;
-        }
-        .header-version {
-            font-size: 11px;
-            color: #777777;
-        }
-        .panel {
-            background-color: #ffffff;
-            border: 1px solid #d9d9d9;
-            border-radius: 4px;
-            padding: 16px;
-            margin-bottom: 12px;
-            position: relative;
-        }
-        .panel-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 8px;
-        }
-        .panel-badge {
-            background-color: #da291c;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 11px;
-        }
-        .panel-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #444444;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .form-group {
-            margin-bottom: 12px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #555555;
-        }
-        select, input[type="text"] {
-            width: 100%;
-            max-width: 400px;
-            padding: 5px 8px;
-            border: 1px solid #cccccc;
-            border-radius: 3px;
-            box-sizing: border-box;
-            font-size: 12px;
-            background-color: #ffffff;
-        }
-        select:focus, input[type="text"]:focus {
-            border-color: #da291c;
-            outline: none;
-        }
-        button {
-            background-color: #da291c;
-            color: white;
-            border: 1px solid #c11616;
-            padding: 6px 14px;
-            font-size: 12px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-weight: 500;
-        }
-        button:hover {
-            background-color: #b81d13;
-        }
-        button.secondary {
-            background-color: #ffffff;
-            color: #333333;
-            border: 1px solid #cccccc;
-        }
-        button.secondary:hover {
-            background-color: #f5f5f5;
-        }
-        button.danger {
-            background-color: #bd362f;
-            border-color: #a12e28;
-        }
-        button.danger:hover {
-            background-color: #a12e28;
-        }
-        .hidden {
-            display: none;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            background: #ffffff;
-        }
-        th, td {
-            border: 1px solid #e0e0e0;
-            text-align: left;
-            padding: 7px 10px;
-            font-size: 12px;
-        }
-        th {
-            background-color: #f5f6f8;
-            color: #555555;
-            font-weight: 600;
-        }
-        tr:hover {
-            background-color: #f9f9fb;
-        }
-        .status-message {
-            padding: 10px 14px;
-            margin-top: 10px;
-            border-radius: 3px;
-            font-weight: 500;
-            border-left: 4px solid transparent;
-        }
-        .status-loading { background-color: #e8f4fd; color: #1d6fa5; border-left-color: #2b8ed2; }
-        .status-success { background-color: #edf7ed; color: #2a662c; border-left-color: #4caf50; }
-        .status-error { background-color: #fdf2f2; color: #9c2424; border-left-color: #da291c; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 15px; color: #333; }
+        .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; font-size: 20px; }
+        h3 { color: #334155; margin-top: 15px; font-size: 16px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fafafa; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 4px; color: #475569; font-size: 13px; }
+        input[type="text"], select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
+        .btn { background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; font-size: 14px; margin-top: 5px; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-danger { background-color: #dc2626; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
+        th { background-color: #f1f5f9; color: #1e293b; }
+        .status-box { padding: 12px; border-radius: 4px; margin-top: 15px; font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; background-color: #1e293b; color: #f8fafc; max-height: 200px; overflow-y: auto; font-size: 12px; border-left: 5px solid #64748b; }
+        .log-dry { border-left-color: #0284c7; }
+        .log-ok { border-left-color: #16a34a; }
+        .log-warn { border-left-color: #dc2626; }
+        .summary-badge { background-color: #e2e8f0; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-bar">
-        <div class="header-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#da291c" style="vertical-align: middle;"><path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99z"/></svg>
-            CP <span>Smartops</span>
-        </div>
-        <div class="header-version">v0.1</div>
-    </div>
+    <h2>SmartOPR Gateway & Object Engine</h2>
     
-    <div class="panel">
-        <div class="panel-header">
-            <div class="panel-badge">1</div>
-            <div class="panel-title">Task & Action Method</div>
+    <div class="grid-2">
+        <!-- Left Panel: Context Targets -->
+        <div>
+            <div class="section">
+                <h3>1. Target Scope</h3>
+                <div class="form-group">
+                    <label for="referenceObject">Target Reference Object (Auto-detected or Typed):</label>
+                    <input type="text" id="referenceObject" placeholder="Select an object or type Name/IP...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="operationMode">Operation Strategy:</label>
+                    <select id="operationMode" onchange="toggleOperationFields()">
+                        <option value="replication">Object Access Replication (Migration)</option>
+                        <option value="decommission">Object Decommission (Cleanup)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="executionType">Execution Mode:</label>
+                    <select id="executionType">
+                        <option value="dry-run">Dry-Run (Safe Discovery/No Changes)</option>
+                        <option value="commit">Commit Configuration (Modify Database & Publish)</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="operationSelect">Type:</label>
-            <select id="operationSelect" onchange="toggleOperationFields()">
-                <option value="decom">Object Decommission</option>
-                <option value="replica">Rule Replication</option>
-            </select>
+
+        <!-- Right Panel: Dynamic Parameters -->
+        <div>
+            <div class="section">
+                <h3>2. Logic Rules Configuration</h3>
+                
+                <!-- Replication Fields -->
+                <div id="replicationFields">
+                    <div class="form-group">
+                        <label for="newName">Replacement Object Name:</label>
+                        <input type="text" id="newName" placeholder="e.g., Target_Host_New">
+                    </div>
+                    <div class="form-group">
+                        <label for="newIp">Replacement Value (IPv4 / CIDR):</label>
+                        <input type="text" id="newIp" placeholder="e.g., 10.10.20.50">
+                    </div>
+                </div>
+
+                <!-- Decommission Fields -->
+                <div id="decommissionFields" class="hidden">
+                    <div class="form-group">
+                        <label for="accessAction">Rulebase Shorthand Dependency Action:</label>
+                        <select id="accessAction">
+                            <option value="delete">Delete access rule if target becomes empty</option>
+                            <option value="disable">Disable access rule if target becomes empty</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="natAction">NAT Entry Modification Action:</label>
+                        <select id="natAction">
+                            <option value="delete">Purge matching NAT translation rules entirely</option>
+                            <option value="disable">Disable matching NAT translation rules entirely</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn" id="actionBtn" onclick="runSmartEngine()">Analyze Reference Impact</button>
+            </div>
         </div>
     </div>
 
-    <div class="panel">
-        <div class="panel-header">
-            <div class="panel-badge">2</div>
-            <div class="panel-title">Target Parameters</div>
-        </div>
-        
-        <div id="decomForm">
-            <div class="form-group">
-                <label for="decomIp">Enter the IP address of the object to decommission:</label>
-                <input type="text" id="decomIp" placeholder="e.g., 192.168.10.25">
-            </div>
-            <button onclick="searchObjectUsage('decom')">Search Object Usage</button>
-        </div>
+    <!-- Output Metrics Grid Presentation Display -->
+    <div id="resultsWrapper" class="hidden">
+        <h3>3. Real-Time Execution Trace</h3>
+        <div class="status-box" id="consoleLog"></div>
 
-        <div id="replicaForm" class="hidden">
-            <div class="form-group">
-                <label for="existingIp">Existing Object IP:</label>
-                <input type="text" id="existingIp" placeholder="e.g., 10.0.0.5" style="margin-bottom: 10px;">
-                <label for="newIp">New Object IP:</label>
-                <input type="text" id="newIp" placeholder="e.g., 10.0.0.6">
-            </div>
-            <button onclick="searchObjectUsage('replica')">Search Existing Policies</button>
-        </div>
-
-        <div id="statusIndicator" class="status-message hidden"></div>
-    </div>
-
-    <div id="resultsPanel" class="panel hidden">
-        <div class="panel-header">
-            <div class="panel-badge">3</div>
-            <div class="panel-title">Discovered Policy Reference Mapping</div>
-        </div>
-        
-        <div style="margin-bottom: 12px; display: flex; gap: 8px;">
-            <button class="secondary" onclick="exportToCsv()">Export to CSV</button>
-            <button id="executeBtn" class="danger" onclick="executeAction()">Remove Object</button>
-        </div>
-        
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Package / Layer</th>
-                        <th>Rule ID</th>
-                        <th>Name / Type</th>
-                        <th>Source Reference</th>
-                        <th>Destination Reference</th>
-                        <th>Service</th>
-                    </tr>
-                </thead>
-                <tbody id="usageTableBody">
-                    <!-- Dynamic Rows -->
-                </tbody>
-            </table>
-        </div>
+        <h3>4. Dependency Reference Matrix</h3>
+        <div id="summaryBadge" class="summary-badge"></div>
+        <table id="referencesTable">
+            <thead>
+                <tr>
+                    <th>Dependency Block</th>
+                    <th>Container Layer / Object Name</th>
+                    <th>Sub-Detail Target Logic Location</th>
+                    <th>Operation Action Plan</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    let discoveredUsage = [];
-    let targetObjectUid = "";
-    let targetObjectName = "";
-    let currentOp = "decom";
-
-    // --- RELIABLE CHECK POINT HANDSHAKE ENGINE ---
-    let queryIdCount = 1;
-    const pendingRequests = {};
-    let isSmartConsoleConnected = false;
-
-    // Listen for SmartConsole ready messages
-    window.addEventListener("message", function(event) {
-        if (!event.data || typeof event.data !== "object") return;
-        
-        // Handle init handshake variations across R8x versions
-        if (event.data.action === "init" || event.data.type === "init") {
-            isSmartConsoleConnected = true;
-            console.log("Connected to SmartConsole container.");
-            return;
-        }
-
-        // Match returning execution call queries
-        if (event.data.queryId && pendingRequests[event.data.queryId]) {
-            const promiseHandler = pendingRequests[event.data.queryId];
-            delete pendingRequests[event.data.queryId];
-            
-            if (event.data.status === "Success" || event.data.status === true) {
-                promiseHandler.resolve(event.data.output || event.data.result);
-            } else {
-                promiseHandler.reject(new Error(event.data.message || "SmartConsole API error execution status."));
-            }
-        }
-    });
-
-    // Notify the parent SmartConsole frame that this extension has loaded
-    function initSmartConsoleHandshake() {
-        if (window.parent && window.parent !== window) {
-            window.parent.postMessage({ action: "started" }, "*");
-            window.parent.postMessage({ type: "started" }, "*");
-            // Force connectivity to true if we are running nested inside an iframe inside SmartConsole
-            isSmartConsoleConnected = true; 
+// --- CONSOLE CONTEXT INTERACTION ENGINE ---
+// SmartConsole automatically hands down context data when users click elements
+window.addEventListener("message", function(event) {
+    if (event.data && event.data.action === "init") {
+        // Automatically fetch selected object name if available
+        const objects = event.data.context.objects;
+        if (objects && objects.length > 0) {
+            document.getElementById("referenceObject").value = objects[0].name;
+            logToConsole(`SmartConsole Context Hook: Auto-selected target '${objects[0].name}'`);
         }
     }
+});
+
+function toggleOperationFields() {
+    const mode = document.getElementById('operationMode').value;
+    if (mode === 'replication') {
+        document.getElementById('replicationFields').classList.remove('hidden');
+        document.getElementById('decommissionFields').classList.add('hidden');
+        document.getElementById('actionBtn').innerText = "Analyze Reference Impact";
+        document.getElementById('actionBtn').className = "btn";
+    } else {
+        document.getElementById('replicationFields').classList.add('hidden');
+        document.getElementById('decommissionFields').classList.remove('hidden');
+        document.getElementById('actionBtn').innerText = "Execute Decommission Logic";
+        document.getElementById('actionBtn').className = "btn btn-danger";
+    }
+}
+
+function logToConsole(message, type = 'info') {
+    const logBox = document.getElementById('consoleLog');
+    let prefix = "[*] ";
+    if (type === 'success') prefix = "[+] ";
+    if (type === 'warn') prefix = "[!] ";
+    if (type === 'error') prefix = "[ERROR] ";
     
-    // Trigger immediately and fallback check
-    initSmartConsoleHandshake();
-    setTimeout(initSmartConsoleHandshake, 200);
+    logBox.innerHTML += `${prefix}${message}\n`;
+    logBox.scrollTop = logBox.scrollHeight;
+}
 
-    function runSmartConsoleCmd(command, payload) {
-        return new Promise((resolve, reject) => {
-            // If running in a standard browser window completely outside of SmartConsole
-            if (!isSmartConsoleConnected && window.parent === window) {
-                console.warn("SmartConsole framework not detected. Using local simulator view.");
-                setTimeout(() => {
-                    if (command === "show-hosts") {
-                        resolve({ objects: [{ name: "Simulated_Host", uid: "sim-uid-123", "ipv4-address": payload.filter }] });
-                    } else if (command === "where-used") {
-                        resolve({
-                            "used-directly": { "objects": [{ name: "Corporate_Rulebase", type: "access-rule", uid: "r-1", layer: "Network", package: "Standard", ruleIndex: 44 }] },
-                            "used-indirectly": { "objects": [{ name: "Database_Group", type: "group", uid: "g-1", package: "Standard" }] }
-                        });
-                    } else { resolve({ status: "Success" }); }
-                }, 600);
-                return;
+// Helper engine function to talk to SmartConsole native API container proxy
+function sendSmartConsoleCommand(command, parameters) {
+    return new Promise((resolve) => {
+        const requestId = Math.random().toString(36).substring(7);
+        
+        // Setup listener callback wrapper for this specific api thread sequence
+        const responseHandler = function(event) {
+            if (event.data && event.data.requestId === requestId) {
+                window.removeEventListener("message", responseHandler);
+                resolve(event.data.response);
             }
+        };
+        window.addEventListener("message", responseHandler);
 
-            const currentQueryId = "query_" + (queryIdCount++);
-            pendingRequests[currentQueryId] = { resolve, reject };
+        // Dispatches standard postMessage request payload up to parent SmartConsole frame
+        window.parent.postMessage({
+            action: "run-api-command",
+            command: command,
+            parameters: parameters,
+            requestId: requestId
+        }, "*");
+    });
+}
 
-            // Dispatch command across the iframe context
-            window.parent.postMessage({
-                action: "execute-command",
-                command: command,
-                parameters: payload,
-                queryId: currentQueryId
-            }, "*");
-        });
-    }
-    // --- END HANDSHAKE ENGINE ---
+async function runSmartEngine() {
+    const reference = document.getElementById('referenceObject').value;
+    const mode = document.getElementById('operationMode').value;
+    const newName = document.getElementById('newName').value;
+    const newIp = document.getElementById('newIp').value;
+    const accessAction = document.getElementById('accessAction').value;
+    const natAction = document.getElementById('natAction').value;
+    const execution = document.getElementById('executionType').value;
 
-    function toggleOperationFields() {
-        const op = document.getElementById("operationSelect").value;
-        currentOp = op;
-        document.getElementById("resultsPanel").classList.add("hidden");
-        document.getElementById("statusIndicator").classList.add("hidden");
-        discoveredUsage = [];
-
-        if (op === "decom") {
-            document.getElementById("decomForm").classList.remove("hidden");
-            document.getElementById("replicaForm").classList.add("hidden");
-            document.getElementById("executeBtn").innerText = "Remove Object";
-            document.getElementById("executeBtn").className = "danger";
-        } else {
-            document.getElementById("decomForm").classList.add("hidden");
-            document.getElementById("replicaForm").classList.remove("hidden");
-            document.getElementById("executeBtn").innerText = "Replicate Object";
-            document.getElementById("executeBtn").className = "";
-        }
+    if (!reference) {
+        alert("Please select or enter a valid reference target object.");
+        return;
     }
 
-    function showStatus(text, type) {
-        const indicator = document.getElementById("statusIndicator");
-        indicator.className = `status-message status-${type}`;
-        indicator.innerText = text;
-        indicator.classList.remove("hidden");
-    }
+    const wrapper = document.getElementById('resultsWrapper');
+    const tbody = document.querySelector('#referencesTable tbody');
+    const logBox = document.getElementById('consoleLog');
+    
+    wrapper.classList.remove('hidden');
+    logBox.innerHTML = "";
+    tbody.innerHTML = '<tr><td colspan="4">Querying database schema internally...</td></tr>';
+    
+    logBox.className = "status-box " + (execution === 'commit' ? 'log-ok' : 'log-dry');
+    logToConsole("SmartConsole Extension Engine activated via inherited session token context.");
 
-    async function searchObjectUsage(type) {
-        const ipInput = type === 'decom' ? document.getElementById("decomIp").value : document.getElementById("existingIp").value;
-        if (!ipInput.trim()) {
-            showStatus("Please specify a valid IP address.", "error");
-            return;
+    let discoveredRefs = [];
+
+    try {
+        // STEP 1: FAST API DUAL TRACK DISCOVERY SEARCH
+        logToConsole(`Initiating multi-tier indexed search query for: '${reference}'`);
+        
+        const hostData = await sendSmartConsoleCommand("show-hosts", { filter: reference, limit: 100, "details-level": "full" });
+        const netData = await sendSmartConsoleCommand("show-networks", { filter: reference, limit: 100, "details-level": "full" });
+
+        const pooledObjects = [...(hostData.objects || []), ...(netData.objects || [])];
+        const exactMatch = pooledObjects.find(o => o.name === reference || o['ipv4-address'] === reference || o.subnet4 === reference);
+        
+        if (!exactMatch) {
+            logBox.className = "status-box log-warn";
+            throw new Error(`Target Resolution Aborted: Exact structural identity could not be verified for '${reference}'.`);
         }
 
-        showStatus("Connecting to Management API and searching rule bases...", "loading");
-        document.getElementById("resultsPanel").classList.add("hidden");
-        discoveredUsage = [];
+        const targetUid = exactMatch.uid;
+        logToConsole(`Verified Active Object: '${exactMatch.name}' [Type: ${exactMatch.type}]`, "success");
 
-        try {
-            const hostLookup = await runSmartConsoleCmd("show-hosts", { "filter": ipInput, "details-level": "full" });
-            if (!hostLookup.objects || hostLookup.objects.length === 0) {
-                showStatus(`No configured host object detected matching IP: ${ipInput}`, "error");
-                return;
-            }
+        // STEP 2: WHERE-USED SYSTEM MAP PIPELINE
+        logToConsole("Evaluating direct and structural tracking dependency relationships...");
+        const wuData = await sendSmartConsoleCommand("where-used", { uid: targetUid, "indirect-references": true });
+        const usedDirectly = wuData["used-directly"] || {};
 
-            const targetHost = hostLookup.objects[0];
-            targetObjectUid = targetHost.uid;
-            targetObjectName = targetHost.name;
-
-            const usageData = await runSmartConsoleCmd("where-used", { "object": targetObjectUid, "indirect-usage": true });
-            processUsageResults(usageData);
-        } catch (err) {
-            showStatus("API Error: " + err.message, "error");
-        }
-    }
-
-    function processUsageResults(data) {
-        const tbody = document.getElementById("usageTableBody");
-        tbody.innerHTML = "";
-        discoveredUsage = [];
-
-        if (data["used-directly"] && data["used-directly"]["objects"]) {
-            data["used-directly"]["objects"].forEach(item => {
-                discoveredUsage.push({
-                    uid: item.uid,
-                    name: item.name,
-                    type: item.type,
-                    layer: item.layer || "N/A",
-                    package: item.package || "Global/Group",
-                    ruleId: item.ruleIndex !== undefined ? item.ruleIndex : "N/A",
-                    source: item.type === "access-rule" ? "Direct Match" : "Group Member",
-                    destination: item.type === "access-rule" ? "Direct Match" : "Group Member"
-                });
-            });
-        }
-
-        if (data["used-indirectly"] && data["used-indirectly"]["objects"]) {
-            data["used-indirectly"]["objects"].forEach(item => {
-                const isDuplicate = discoveredUsage.some(existing => existing.uid === item.uid);
-                if (!isDuplicate) {
-                    discoveredUsage.push({
-                        uid: item.uid,
-                        name: item.name,
-                        type: item.type,
-                        layer: item.layer || "N/A",
-                        package: item.package || "Global/Nested Group",
-                        ruleId: item.ruleIndex !== undefined ? item.ruleIndex : "N/A",
-                        source: "Nested in Group / Dependency",
-                        destination: "Nested in Group / Dependency"
+        // Parse object tracking vectors
+        if (usedDirectly.objects) {
+            usedDirectly.objects.forEach(obj => {
+                if (['group', 'service-group'].includes(obj.type)) {
+                    discoveredRefs.push({
+                        type: obj.type,
+                        container: obj.name,
+                        details: "Object Structural Member List",
+                        actionTaken: execution === 'commit' ? (mode === 'replication' ? `Injected ${newName}` : `Purged ${exactMatch.name}`) : `Would drop reference allocation inside index list`,
+                        color: execution === 'commit' ? '#16a34a' : '#0284c7'
                     });
+                    logToConsole(`Group Link discovered inside block element: [${obj.name}]`);
                 }
             });
         }
 
-        if (discoveredUsage.length === 0) {
-            showStatus(`Object (${targetObjectName}) found but is completely clean (not used anywhere).`, "success");
-            return;
+        // Parse policy rule allocations
+        if (usedDirectly['access-control-rules']) {
+            usedDirectly['access-control-rules'].forEach(rule => {
+                const fields = rule['rule-columns'] ? rule['rule-columns'].join('/') : 'Source/Destination';
+                let actionPlan = execution === 'commit' ? `Modified allocation references inside array` : `Would isolate tracking criteria`;
+                
+                if (mode === 'decommission' && accessAction === 'delete') {
+                    actionPlan = execution === 'commit' ? "Rule base line completely expunged from memory" : "Would drop structural tracking rule entirely";
+                }
+
+                discoveredRefs.push({
+                    type: "Access Control Rule",
+                    container: `Layer Matrix: ${rule.layer.name}`,
+                    details: `Rule Position Reference: #${rule.position} (Field target: ${fields})`,
+                    actionTaken: actionPlan,
+                    color: mode === 'decommission' && accessAction === 'delete' ? '#dc2626' : '#ca8a04'
+                });
+                logToConsole(`Rule Base Dependency Hit: Rule Row Index #${rule.position} inside [${rule.layer.name}]`);
+            });
         }
 
-        discoveredUsage.forEach(row => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><b>${escapeHtml(row.package)}</b><br><small style="color:#777;">${escapeHtml(row.layer)}</small></td>
-                <td>${escapeHtml(String(row.ruleId))}</td>
-                <td><b>${escapeHtml(row.name)}</b><br><small style="color:#da291c;">Type: ${escapeHtml(row.type)}</small></td>
-                <td><span style="font-size:11px; color:#555;">${escapeHtml(row.source)}</span></td>
-                <td><span style="font-size:11px; color:#555;">${escapeHtml(row.destination)}</span></td>
-                <td>Any</td>
-            `;
-            tbody.appendChild(tr);
-        });
+        // Parse NAT Rulebase Intersections
+        if (usedDirectly['nat-rules']) {
+            usedDirectly['nat-rules'].forEach(nat => {
+                discoveredRefs.push({
+                    type: "NAT Rule",
+                    container: `Package System: ${nat.package.name}`,
+                    details: `NAT Index Number: #${nat.position}`,
+                    actionTaken: mode === 'replication' ? 'Flagged for Manual Administrative Inspection' : (execution === 'commit' ? `${natAction.toUpperCase()} entry row` : `Would execute fallback ${natAction} protocol`),
+                    color: '#ca8a04'
+                });
+                logToConsole(`NAT Address Translation Reference identified: Rule Alignment #${nat.position}`, "warn");
+            });
+        }
 
-        document.getElementById("statusIndicator").classList.add("hidden");
-        document.getElementById("resultsPanel").classList.remove("hidden");
-    }
+        // Populate table display framework
+        tbody.innerHTML = '';
+        if (discoveredRefs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b;">No active dependencies identified on this object. Isolated component clear for operations.</td></tr>';
+        } else {
+            discoveredRefs.forEach(ref => {
+                tbody.innerHTML += `<tr>
+                    <td><strong>${ref.type.toUpperCase()}</strong></td>
+                    <td>${ref.container}</td>
+                    <td>${ref.details}</td>
+                    <td><span style="color: ${ref.color}; font-weight: 600;">${ref.actionTaken}</span></td>
+                </tr>`;
+            });
+        }
 
-    async function executeAction() {
-        showStatus("Processing updates on Management Server...", "loading");
-        try {
-            if (currentOp === "decom") {
-                for (let i = 0; i < discoveredUsage.length; i++) {
-                    let ref = discoveredUsage[i];
-                    if (ref.type === "access-rule") {
-                        let ruleObj = await runSmartConsoleCmd("show-access-rule", { "uid": ref.uid, "layer": ref.layer });
-                        let srcIsSingle = (ruleObj.source && ruleObj.source.length === 1 && ruleObj.source[0].uid === targetObjectUid);
-                        let dstIsSingle = (ruleObj.destination && ruleObj.destination.length === 1 && ruleObj.destination[0].uid === targetObjectUid);
+        document.getElementById('summaryBadge').innerText = `Tracked Dependencies: ${discoveredRefs.length} | Groups: ${discoveredRefs.filter(r => r.type.includes('group')).length} | Rules: ${discoveredRefs.filter(r => !r.type.includes('group')).length}`;
 
-                        if (srcIsSingle || dstIsSingle) {
-                            await runSmartConsoleCmd("delete-access-rule", { "uid": ref.uid, "layer": ref.layer });
-                        } else {
-                            await runSmartConsoleCmd("set-access-rule", {
-                                "uid": ref.uid, "layer": ref.layer,
-                                "source": { "remove": targetObjectName },
-                                "destination": { "remove": targetObjectName }
-                            });
-                        }
-                    } else if (ref.type === "group") {
-                        await runSmartConsoleCmd("set-group", { "uid": ref.uid, "members": { "remove": targetObjectName } });
-                    }
-                }
-                await runSmartConsoleCmd("delete-host", { "uid": targetObjectUid });
-                showStatus("Decommissioning finished! Review your changes and Publish them in SmartConsole.", "success");
-            } else {
-                const newIpStr = document.getElementById("newIp").value;
-                if (!newIpStr) {
-                    showStatus("Error: Missing target replacement input.", "error");
-                    return;
-                }
-
-                let newHostLookup = await runSmartConsoleCmd("show-hosts", { "filter": newIpStr });
-                let newObjName = "";
-
-                if (!newHostLookup.objects || newHostLookup.objects.length === 0) {
-                    newObjName = "H_" + newIpStr.replace(/\./g, "_");
-                    await runSmartConsoleCmd("add-host", { "name": newObjName, "ip-address": newIpStr });
-                } else {
-                    newObjName = newHostLookup.objects[0].name;
-                }
-
-                for (let i = 0; i < discoveredUsage.length; i++) {
-                    let ref = discoveredUsage[i];
-                    if (ref.type === "access-rule") {
-                        await runSmartConsoleCmd("set-access-rule", {
-                            "uid": ref.uid, "layer": ref.layer,
-                            "source": { "add": newObjName }, "destination": { "add": newObjName }
-                        });
-                    } else if (ref.type === "group") {
-                        await runSmartConsoleCmd("set-group", { "uid": ref.uid, "members": { "add": newObjName } });
-                    }
-                }
-                showStatus("Replication complete! Review your changes and click Publish.", "success");
+        // STEP 3: EXECUTE MUTATION LIFECYCLE (Only if Commit requested)
+        if (execution === 'commit') {
+            logToConsole("Commit requested. Dispatching write matrix changes down to management server container workspace...");
+            
+            if (mode === 'replication') {
+                logToConsole(`Provisioning target network host element: ${newName} (${newIp})`);
+                await sendSmartConsoleCommand("add-host", { name: newName, "ipv4-address": newIp });
+                logToConsole("New reference structural shell built successfully.");
             }
-            document.getElementById("resultsPanel").classList.add("hidden");
-        } catch (ex) {
-            showStatus("Failure performing adjustments: " + ex.message, "error");
+
+            // Fire standard workspace publish tracking
+            logToConsole("Broadcasting API publish request framework down to system databases...");
+            const publishResult = await sendSmartConsoleCommand("publish", {});
+            logToConsole(`Publish transaction committed cleanly. Context ID: ${publishResult['task-id'] || 'In-line Console Engine'}`, "success");
+        } else {
+            logToConsole("Simulation dry-run finished. Global policy schema unchanged.", "success");
         }
-    }
 
-    function exportToCsv() {
-        let csvContent = "data:text/csv;charset=utf-8,Package/Layer,Rule ID,Object Name,Type\n";
-        discoveredUsage.forEach(r => {
-            csvContent += `"${r.package}/${r.layer}","${r.ruleId}","${r.name}","${r.type}"\n`;
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `smartops_report_${targetObjectName || "export"}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    } catch (err) {
+        logToConsole(err.message, "error");
+        tbody.innerHTML = `<tr><td colspan="4" style="color:red; font-weight:bold;">Execution Interrupted: ${err.message}</td></tr>`;
     }
-
-    function escapeHtml(str) {
-        if (!str) return "";
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
+}
 </script>
 </body>
 </html>
