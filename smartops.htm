@@ -1,347 +1,722 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartOPR - Object Lifecycle Engine Extension</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 15px; color: #333; }
-        .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; font-size: 20px; }
-        h3 { color: #334155; margin-top: 15px; font-size: 16px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fafafa; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; margin-bottom: 4px; color: #475569; font-size: 13px; }
-        input[type="text"], select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
-        .btn { background-color: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; font-size: 14px; margin-top: 5px; }
-        .btn:hover { background-color: #1d4ed8; }
-        .btn-danger { background-color: #dc2626; }
-        .btn-danger:hover { background-color: #b91c1c; }
-        .hidden { display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
-        th { background-color: #f1f5f9; color: #1e293b; }
-        .status-box { padding: 12px; border-radius: 4px; margin-top: 15px; font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; background-color: #1e293b; color: #f8fafc; max-height: 200px; overflow-y: auto; font-size: 12px; border-left: 5px solid #64748b; }
-        .log-dry { border-left-color: #0284c7; }
-        .log-ok { border-left-color: #16a34a; }
-        .log-warn { border-left-color: #dc2626; }
-        .summary-badge { background-color: #e2e8f0; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; font-size: 12px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartOps — SmartConsole Extension</title>
+<style>
+  :root{
+    --bg:#0c0f0d;
+    --panel:#121613;
+    --panel-alt:#161b18;
+    --border:#232a25;
+    --text:#d7ecd9;
+    --text-dim:#7fa088;
+    --accent:#39ff88;
+    --accent-dim:#1f8a4c;
+    --amber:#f5b942;
+    --red:#ff5c5c;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;}
+  body{min-height:100vh;padding:20px;}
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* header */
+  .topbar{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:18px;}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand .dot{color:var(--accent);}
+  .brand h1{font-size:18px;letter-spacing:0.5px;margin:0;font-weight:600;}
+  .brand .ver{color:var(--text-dim);font-size:11px;border:1px solid var(--border);padding:2px 6px;border-radius:3px;}
+  .conn{font-size:11px;color:var(--text-dim);}
+  .conn .state{color:var(--accent);}
+
+  /* panel */
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;margin-bottom:16px;overflow:hidden;}
+  .panel-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--panel-alt);}
+  .panel-head .num{color:var(--bg);background:var(--accent);width:18px;height:18px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+  .panel-head h2{font-size:12px;letter-spacing:0.6px;text-transform:uppercase;margin:0;color:var(--text);font-weight:600;}
+  .panel-body{padding:16px;}
+
+  label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;}
+  select, input[type=text]{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    padding:9px 10px;border-radius:4px;font-family:var(--mono);font-size:13px;
+  }
+  select:focus, input[type=text]:focus{outline:none;border-color:var(--accent-dim);}
+  .field{margin-bottom:14px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .row > .field{flex:1;min-width:220px;}
+
+  .btn{
+    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.3px;
+    padding:9px 16px;border-radius:4px;border:1px solid var(--accent-dim);
+    background:transparent;color:var(--accent);cursor:pointer;transition:all .12s ease;
+  }
+  .btn:hover{background:rgba(57,255,136,0.08);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);color:#04160a;border-color:var(--accent);}
+  .btn-primary:hover{background:#5dffa2;}
+  .btn-danger{border-color:#7a2a2a;color:var(--red);}
+  .btn-danger:hover{background:rgba(255,92,92,0.08);}
+  .btn-ghost{border-color:var(--border);color:var(--text-dim);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-dim);}
+  .btn-row{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;}
+
+  .hint{font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.5;}
+
+  /* results table */
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{text-align:left;color:var(--text-dim);text-transform:uppercase;font-size:10px;letter-spacing:0.4px;
+     border-bottom:1px solid var(--border);padding:8px 8px;position:sticky;top:0;background:var(--panel);}
+  td{padding:8px 8px;border-bottom:1px solid #1a201c;vertical-align:top;}
+  tr:hover td{background:rgba(57,255,136,0.03);}
+  .tbl-scroll{max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:4px;}
+  .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:0.3px;}
+  .badge-access{background:rgba(57,255,136,0.12);color:var(--accent);}
+  .badge-nat{background:rgba(245,185,66,0.15);color:var(--amber);}
+  .badge-group{background:rgba(120,150,255,0.15);color:#8fb0ff;}
+  .tag{background:#1c2320;border:1px solid var(--border);padding:1px 6px;border-radius:3px;font-size:11px;margin:1px 2px 1px 0;display:inline-block;}
+  .tag.hit{border-color:var(--accent-dim);color:var(--accent);}
+  .empty{color:var(--text-dim);text-align:center;padding:26px;font-size:12px;}
+
+  .section-title{display:flex;align-items:center;gap:8px;margin:16px 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);}
+  .section-title .count{background:var(--panel-alt);border:1px solid var(--border);color:var(--text);padding:0 6px;border-radius:9px;font-size:10px;}
+  .section-title.report-only{color:var(--amber);}
+  .section-block:first-child .section-title{margin-top:0;}
+
+  .summary-bar{display:flex;gap:18px;padding:10px 14px;background:var(--panel-alt);border-top:1px solid var(--border);
+    font-size:11px;color:var(--text-dim);flex-wrap:wrap;}
+  .summary-bar b{color:var(--text);}
+
+  .log{background:#080a09;border:1px solid var(--border);border-radius:4px;padding:10px 12px;
+    font-size:12px;max-height:220px;overflow:auto;line-height:1.65;}
+  .log .l-ok{color:var(--accent);}
+  .log .l-warn{color:var(--amber);}
+  .log .l-err{color:var(--red);}
+  .log .l-dim{color:var(--text-dim);}
+
+  .hidden{display:none !important;}
+  .mode-block{border-top:1px dashed var(--border);margin-top:14px;padding-top:14px;}
+
+  .footer-note{text-align:center;color:var(--text-dim);font-size:11px;margin-top:24px;line-height:1.6;}
+  .footer-note code{color:var(--text);}
+
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:#232a25;border-radius:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  .pulse{animation:pulse 1.1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+</style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="container">
-    <h2>SmartOPR Gateway & Object Engine</h2>
-    
-    <div class="grid-2">
-        <!-- Left Panel: Context Targets -->
-        <div>
-            <div class="section">
-                <h3>1. Target Scope</h3>
-                <div class="form-group">
-                    <label for="referenceObject">Target Reference Object (Auto-detected or Typed):</label>
-                    <input type="text" id="referenceObject" placeholder="Select an object or type Name/IP...">
-                </div>
-                
-                <div class="form-group">
-                    <label for="operationMode">Operation Strategy:</label>
-                    <select id="operationMode" onchange="toggleOperationFields()">
-                        <option value="replication">Object Access Replication (Migration)</option>
-                        <option value="decommission">Object Decommission (Cleanup)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="executionType">Execution Mode:</label>
-                    <select id="executionType">
-                        <option value="dry-run">Dry-Run (Safe Discovery/No Changes)</option>
-                        <option value="commit">Commit Configuration (Modify Database & Publish)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Panel: Dynamic Parameters -->
-        <div>
-            <div class="section">
-                <h3>2. Logic Rules Configuration</h3>
-                
-                <!-- Replication Fields -->
-                <div id="replicationFields">
-                    <div class="form-group">
-                        <label for="newName">Replacement Object Name:</label>
-                        <input type="text" id="newName" placeholder="e.g., Target_Host_New">
-                    </div>
-                    <div class="form-group">
-                        <label for="newIp">Replacement Value (IPv4 / CIDR):</label>
-                        <input type="text" id="newIp" placeholder="e.g., 10.10.20.50">
-                    </div>
-                </div>
-
-                <!-- Decommission Fields -->
-                <div id="decommissionFields" class="hidden">
-                    <div class="form-group">
-                        <label for="accessAction">Rulebase Shorthand Dependency Action:</label>
-                        <select id="accessAction">
-                            <option value="delete">Delete access rule if target becomes empty</option>
-                            <option value="disable">Disable access rule if target becomes empty</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="natAction">NAT Entry Modification Action:</label>
-                        <select id="natAction">
-                            <option value="delete">Purge matching NAT translation rules entirely</option>
-                            <option value="disable">Disable matching NAT translation rules entirely</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button class="btn" id="actionBtn" onclick="runSmartEngine()">Analyze Reference Impact</button>
-            </div>
-        </div>
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot">●</span>
+      <h1>SmartOps</h1>
+      <span class="ver">v0.1</span>
     </div>
+    <div class="conn">Session: <span class="state" id="sessionState">connected (mock)</span> · Domain: MDS-Prod</div>
+  </div>
 
-    <!-- Output Metrics Grid Presentation Display -->
-    <div id="resultsWrapper" class="hidden">
-        <h3>3. Real-Time Execution Trace</h3>
-        <div class="status-box" id="consoleLog"></div>
+  <!-- STEP 1: MODE SELECT -->
+  <div class="panel">
+    <div class="panel-head"><span class="num">1</span><h2>Operation</h2></div>
+    <div class="panel-body">
+      <div class="row">
+        <div class="field" style="max-width:360px;">
+          <label for="modeSelect">Choose task</label>
+          <select id="modeSelect">
+            <option value="">— Select an operation —</option>
+            <option value="decom">Object Decommission</option>
+            <option value="replicate">Rule Replication</option>
+          </select>
+        </div>
+      </div>
 
-        <h3>4. Dependency Reference Matrix</h3>
-        <div id="summaryBadge" class="summary-badge"></div>
-        <table id="referencesTable">
-            <thead>
-                <tr>
-                    <th>Dependency Block</th>
-                    <th>Container Layer / Object Name</th>
-                    <th>Sub-Detail Target Logic Location</th>
-                    <th>Operation Action Plan</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+      <!-- Decommission inputs -->
+      <div id="decomBlock" class="mode-block hidden">
+        <div class="row">
+          <div class="field">
+            <label for="decomIp">IP address of the object to decommission</label>
+            <input type="text" id="decomIp" placeholder="e.g. 10.20.30.40">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="decomSoleAction">If object is the only source/destination in a rule</label>
+            <select id="decomSoleAction">
+              <option value="delete" selected>Delete the rule</option>
+              <option value="disable">Disable the rule</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="decomNatAction">NAT rule using object as original-source/destination</label>
+            <select id="decomNatAction">
+              <option value="delete" selected>Delete the NAT rule</option>
+              <option value="disable">Disable the NAT rule</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnDecomSearch">Search for Object</button>
+        </div>
+        <div class="hint">Resolves the exact host/network object for this IP (<code>show hosts</code> / <code>show networks</code>, exact match on <code>ipv4-address</code>), then runs <code>where-used uid &lt;uid&gt;</code> — the same calls used by decommision_object_v10.sh.</div>
+      </div>
+
+      <!-- Replication inputs -->
+      <div id="replicateBlock" class="mode-block hidden">
+        <div class="row">
+          <div class="field">
+            <label for="repExistingIp">Existing object IP</label>
+            <input type="text" id="repExistingIp" placeholder="e.g. 10.20.30.40">
+          </div>
+          <div class="field">
+            <label for="repNewIp">New object IP</label>
+            <input type="text" id="repNewIp" placeholder="e.g. 10.20.30.41">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnRepSearch">Search Policies of Existing Object</button>
+        </div>
+        <div class="hint">Adds the new object to the same groups and to source/destination of the same access rules as the reference object. Direct NAT and Threat Prevention references are <b>report-only</b> — same behavior as replication_script_v2.sh — since NAT should generally be covered by group membership instead of direct edits.</div>
+      </div>
     </div>
+  </div>
+
+  <!-- STEP 2: RESULTS -->
+  <div class="panel hidden" id="resultsPanel">
+    <div class="panel-head">
+      <span class="num">2</span><h2 id="resultsTitle">Where-Used Results</h2>
+    </div>
+    <div class="panel-body">
+      <div id="resultsMeta" class="hint" style="margin-bottom:10px;"></div>
+      <div id="resultsContainer"></div>
+
+      <div class="summary-bar" id="summaryBar"></div>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-ghost" id="btnExportCsv" disabled>Export CSV</button>
+        <button class="btn btn-danger hidden" id="btnRemoveObject">Remove Object</button>
+        <button class="btn btn-primary hidden" id="btnReplicate">Replicate to New Object</button>
+      </div>
+      <div class="hint" id="actionHint"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: EXECUTION LOG -->
+  <div class="panel hidden" id="logPanel">
+    <div class="panel-head"><span class="num">3</span><h2>Execution Log</h2></div>
+    <div class="panel-body">
+      <div class="log" id="logBox"></div>
+      <div class="hint">Changes are staged via the Management API and left uncommitted. Review under Discard/Publish in SmartConsole, then Publish when ready.</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    SmartOps talks to the CheckPoint Management API (<code>where-used</code>, <code>set-access-rule</code>, <code>set-group</code>, <code>delete-access-rule</code>, <code>publish</code>).<br>
+    This build runs against a mock API layer — swap <code>CheckPointAPI</code> for real <code>fetch()</code> calls to your Management Server to go live.
+  </div>
+
 </div>
 
 <script>
-// --- CONSOLE CONTEXT INTERACTION ENGINE ---
-// SmartConsole automatically hands down context data when users click elements
-window.addEventListener("message", function(event) {
-    if (event.data && event.data.action === "init") {
-        // Automatically fetch selected object name if available
-        const objects = event.data.context ? event.data.context.objects : null;
-        if (objects && objects.length > 0) {
-            document.getElementById("referenceObject").value = objects[0].name;
-            logToConsole(`SmartConsole Context Hook: Auto-selected target '${objects[0].name}'`);
-        }
+/* ============================================================
+   MOCK MANAGEMENT-API LAYER
+   Mirrors the exact mgmt_cli calls used by your tested scripts
+   (decommision_object_v10.sh / replication_script_v2.sh):
+
+     show hosts filter <ip> / show networks filter <ip>   -> exact ipv4-address match
+     show objects filter <name>                            -> exact name match
+     where-used uid <uid>                                  -> used-directly{ objects[],
+                                                                access-control-rules[],
+                                                                nat-rules[], threat-prevention-rules[] }
+     set group name <g> members.add|members.remove <name>
+     set access-rule uid <uid> layer <layer> <column>.add|<column>.remove <name>
+     delete access-rule uid <uid> layer <layer>
+     set access-rule uid <uid> layer <layer> enabled false
+     set nat-rule / delete nat-rule uid <uid> package <pkg>
+     add host name <name> ipv4-address <ip>
+     publish / discard
+
+   Swap runCommand()'s body for real calls once you confirm the
+   SmartConsole client-extensions-api bridge object/method names
+   against the Developer Guide (this is the only function that
+   needs to change — everything above it stays the same).
+   ============================================================ */
+
+const MOCK_DB = {
+  // host/network objects, keyed by exact IP (mirrors "show hosts/networks filter <ip>")
+  objects: {
+    "10.20.30.40": { name: "srv-app-40", type: "host", uid: "uid-app-40" },
+    "10.20.30.41": { name: "srv-app-41", type: "host", uid: "uid-app-41" },
+    "10.10.5.15":  { name: "web-dmz-15", type: "host", uid: "uid-dmz-15" },
+    "172.16.8.9":  { name: "db-core-9",  type: "host", uid: "uid-core-9" }
+  },
+  // where-used results, keyed by uid — shaped exactly like the real API response
+  whereUsed: {
+    "uid-app-40": {
+      "used-directly": {
+        "objects": [
+          { name: "Grp-AppServers",       type: "group", uid: "uid-grp-app" },
+          { name: "Grp-Monitored-Hosts",  type: "group", uid: "uid-grp-mon" }
+        ],
+        "access-control-rules": [
+          { package: { name: "Site-A_Standard" }, layer: { name: "Network-Access" }, position: 12,
+            rule: { uid: "rule-12", name: "App-40 to DMZ web" }, "rule-columns": ["source"],
+            _members: { source: ["srv-app-40"], destination: ["web-dmz-15"] } },
+          { package: { name: "Site-B_DC" }, layer: { name: "DC-Core-Access" }, position: 3,
+            rule: { uid: "rule-3", name: "DB core to App-40" }, "rule-columns": ["destination"],
+            _members: { source: ["db-core-9"], destination: ["srv-app-40"] } },
+          { package: { name: "Site-B_DC" }, layer: { name: "DC-Core-Access" }, position: 9,
+            rule: { uid: "rule-9", name: "App-40 mgmt" }, "rule-columns": ["source"],
+            _members: { source: ["srv-app-40"], destination: ["mgmt-subnet"] } }
+        ],
+        "nat-rules": [
+          { package: { name: "Site-A_Standard" }, position: 4,
+            rule: { uid: "nat-4" }, "rule-columns": ["original-source"] }
+        ],
+        "threat-prevention-rules": []
+      }
+    },
+    "uid-app-41": { "used-directly": { objects: [], "access-control-rules": [], "nat-rules": [], "threat-prevention-rules": [] } },
+    "uid-dmz-15": { "used-directly": { objects: [], "access-control-rules": [], "nat-rules": [], "threat-prevention-rules": [] } },
+    "uid-core-9": { "used-directly": { objects: [], "access-control-rules": [], "nat-rules": [], "threat-prevention-rules": [] } }
+  }
+};
+
+/* runCommand — single choke point that talks to CheckPoint.
+   command names match mgmt_cli commands 1:1 so this is the only
+   place to rewire once the real client-extensions-api bridge is confirmed. */
+async function runCommand(command, params){
+  await new Promise(r => setTimeout(r, 250 + Math.random()*250));
+
+  switch(command){
+    case 'show-hosts-or-networks-by-ip': {
+      const obj = MOCK_DB.objects[params.ip];
+      return obj ? { name: obj.name, type: obj.type, uid: obj.uid } : null;
     }
+    case 'where-used': {
+      return MOCK_DB.whereUsed[params.uid] || { "used-directly": { objects: [], "access-control-rules": [], "nat-rules": [], "threat-prevention-rules": [] } };
+    }
+    case 'set-group-members-remove':
+      return { uid: params.groupName }; // success shape mgmt_cli returns
+    case 'set-group-members-add':
+      return { uid: params.groupName };
+    case 'set-access-rule-column-remove':
+      return { uid: params.ruleUid };
+    case 'set-access-rule-column-add':
+      return { uid: params.ruleUid };
+    case 'delete-access-rule':
+      return { message: 'OK' };
+    case 'set-access-rule-disable':
+      return { uid: params.ruleUid };
+    case 'delete-nat-rule':
+      return { message: 'OK' };
+    case 'set-nat-rule-disable':
+      return { uid: params.ruleUid };
+    case 'add-host': {
+      const uid = 'uid-new-' + params.ip.replace(/\./g,'-');
+      MOCK_DB.objects[params.ip] = { name: params.name, type: 'host', uid };
+      return { uid, name: params.name };
+    }
+    case 'publish':
+      return { 'task-id': 'task-mock-0001' };
+    case 'discard':
+      return { message: 'OK' };
+    default:
+      throw new Error('Unknown command: ' + command);
+  }
+}
+
+/* ============================================================
+   HELPERS OVER where-used RESULTS (mirror the jq filters
+   in print_reference_usage / remove_from_* / replicate_*)
+   ============================================================ */
+function splitWhereUsed(whereUsed){
+  const d = (whereUsed && whereUsed['used-directly']) || {};
+  const objects = d.objects || [];
+  return {
+    groups: objects.filter(o => o.type === 'group' || o.type === 'group-with-exclusion' || o.type === 'service-group'),
+    others: objects.filter(o => !(o.type === 'group' || o.type === 'group-with-exclusion' || o.type === 'service-group')),
+    accessRules: d['access-control-rules'] || [],
+    natRules: d['nat-rules'] || [],
+    threatRules: d['threat-prevention-rules'] || []
+  };
+}
+
+function refCount(whereUsed){
+  const s = splitWhereUsed(whereUsed);
+  return s.groups.length + s.others.length + s.accessRules.length + s.natRules.length + s.threatRules.length;
+}
+
+/* ============================================================
+   UI STATE + WIRING
+   ============================================================ */
+let currentMode = null;
+let currentObject = null;   // { name, type, uid }
+let currentWhereUsed = null;
+let currentNewIp = null;
+
+const el = id => document.getElementById(id);
+
+el('modeSelect').addEventListener('change', (e)=>{
+  currentMode = e.target.value;
+  el('decomBlock').classList.toggle('hidden', currentMode !== 'decom');
+  el('replicateBlock').classList.toggle('hidden', currentMode !== 'replicate');
+  resetResults();
 });
 
-function toggleOperationFields() {
-    const mode = document.getElementById('operationMode').value;
-    if (mode === 'replication') {
-        document.getElementById('replicationFields').classList.remove('hidden');
-        document.getElementById('decommissionFields').classList.add('hidden');
-        document.getElementById('actionBtn').innerText = "Analyze Reference Impact";
-        document.getElementById('actionBtn').className = "btn";
-    } else {
-        document.getElementById('replicationFields').classList.add('hidden');
-        document.getElementById('decommissionFields').classList.remove('hidden');
-        document.getElementById('actionBtn').innerText = "Execute Decommission Logic";
-        document.getElementById('actionBtn').className = "btn btn-danger";
+el('btnDecomSearch').addEventListener('click', ()=> runSearch('decom'));
+el('btnRepSearch').addEventListener('click', ()=> runSearch('replicate'));
+el('btnExportCsv').addEventListener('click', exportCsv);
+el('btnRemoveObject').addEventListener('click', doRemove);
+el('btnReplicate').addEventListener('click', doReplicate);
+
+function resetResults(){
+  el('resultsPanel').classList.add('hidden');
+  el('logPanel').classList.add('hidden');
+  el('resultsMeta').innerText = '';
+  el('resultsContainer').innerHTML = '';
+  el('summaryBar').innerHTML = '';
+  el('btnExportCsv').disabled = true;
+  el('btnRemoveObject').classList.add('hidden');
+  el('btnReplicate').classList.add('hidden');
+  currentWhereUsed = null;
+  currentObject = null;
+}
+
+async function runSearch(mode){
+  const ipField = mode === 'decom' ? el('decomIp') : el('repExistingIp');
+  const ip = ipField.value.trim();
+  if(!isValidIp(ip)){
+    alert('Enter a valid IPv4 address.');
+    return;
+  }
+  if(mode === 'replicate'){
+    currentNewIp = el('repNewIp').value.trim();
+    if(!isValidIp(currentNewIp)){
+      alert('Enter a valid IPv4 address for the new object.');
+      return;
     }
+  }
+
+  const btn = mode === 'decom' ? el('btnDecomSearch') : el('btnRepSearch');
+  setBusy(btn, 'Searching…');
+
+  // Step 1: resolve the exact host/network object for this IP
+  // (real equivalent: show hosts filter <ip> + show networks filter <ip>,
+  //  keep only exact ipv4-address / subnet4 matches)
+  const obj = await runCommand('show-hosts-or-networks-by-ip', { ip });
+
+  if(!obj){
+    setBusy(btn, mode === 'decom' ? 'Search for Object' : 'Search Policies of Existing Object', false);
+    el('resultsPanel').classList.remove('hidden');
+    el('resultsMeta').innerText = `No exact host/network object found for '${ip}'.`;
+    el('resultsContainer').innerHTML = '';
+    el('summaryBar').innerHTML = '';
+    return;
+  }
+
+  currentObject = obj;
+
+  // Step 2: where-used uid <uid>
+  const whereUsed = await runCommand('where-used', { uid: obj.uid });
+  currentWhereUsed = whereUsed;
+
+  setBusy(btn, mode === 'decom' ? 'Search for Object' : 'Search Policies of Existing Object', false);
+  renderResults(mode, obj, whereUsed);
 }
 
-function logToConsole(message, type = 'info') {
-    const logBox = document.getElementById('consoleLog');
-    let prefix = "[*] ";
-    if (type === 'success') prefix = "[+] ";
-    if (type === 'warn') prefix = "[!] ";
-    if (type === 'error') prefix = "[ERROR] ";
-    
-    logBox.innerHTML += `${prefix}${message}\n`;
-    logBox.scrollTop = logBox.scrollHeight;
-}
+function renderResults(mode, obj, whereUsed){
+  el('resultsPanel').classList.remove('hidden');
+  const s = splitWhereUsed(whereUsed);
 
-// Helper engine function to talk to SmartConsole native API container proxy
-function sendSmartConsoleCommand(command, parameters) {
-    return new Promise((resolve, reject) => {
-        const requestId = Math.random().toString(36).substring(7);
-        
-        // Setup listener callback wrapper for this specific api thread sequence
-        const responseHandler = function(event) {
-            if (event.data && event.data.requestId === requestId) {
-                window.removeEventListener("message", responseHandler);
-                
-                // CRITICAL FIX: Unpacking the native SmartConsole extension API payload structure
-                // SmartConsole passes data back wrapped inside event.data.result or event.data.response
-                const apiResponse = event.data.result || event.data.response || event.data;
-                resolve(apiResponse);
-            }
-        };
-        window.addEventListener("message", responseHandler);
+  el('resultsMeta').innerHTML = mode === 'decom'
+    ? `Reference: <b>${escapeHtml(obj.name)}</b> [${obj.type}] (${obj.uid}) — mode: <b>where-used</b>`
+    : `Reference: <b>${escapeHtml(obj.name)}</b> [${obj.type}] &nbsp;→&nbsp; New object: <b>${escapeHtml(currentNewIp)}</b>`;
 
-        // Dispatches standard postMessage request payload up to parent SmartConsole frame
-        window.parent.postMessage({
-            action: "run-api-command",
-            command: command,
-            parameters: parameters,
-            requestId: requestId
-        }, "*");
+  const c = el('resultsContainer');
+  c.innerHTML = '';
+
+  if(refCount(whereUsed) === 0){
+    c.innerHTML = `<div class="empty">'${escapeHtml(obj.name)}' has no direct references (not in any group, rule, or NAT entry).</div>`;
+  }
+
+  if(s.groups.length){
+    c.appendChild(buildSimpleSection('Groups', s.groups.length, s.groups.map(g =>
+      [g.name, `<span class="badge badge-group">${escapeHtml(g.type)}</span>`]), ['Name','Type']));
+  }
+
+  if(s.others.length){
+    c.appendChild(buildSimpleSection('Other Object References (clusters / gateways — manual review)', s.others.length,
+      s.others.map(o => [o.name, escapeHtml(o.type)]), ['Name','Type'], true));
+  }
+
+  if(s.accessRules.length){
+    const rows = [];
+    s.accessRules.forEach(r=>{
+      (r['rule-columns']||[]).forEach(col=>{
+        const isSourceOrDest = (col === 'source' || col === 'destination');
+        const members = r._members ? (r._members[col]||[]) : [];
+        const sole = isSourceOrDest && members.length === 1;
+        rows.push([
+          r.package.name, r.layer.name, r.position, r.rule.name || '-',
+          `<span class="tag ${isSourceOrDest?'hit':''}">${escapeHtml(col)}</span>`,
+          sole && mode==='decom' ? `<span class="badge badge-nat">sole ${col} — will ${el('decomSoleAction').value}</span>` : (isSourceOrDest ? 'ok' : '<span class="badge badge-group">manual review</span>')
+        ]);
+      });
     });
+    c.appendChild(buildSimpleSection('Access Control Rules', s.accessRules.length, rows,
+      ['Package','Layer','Rule #','Rule Name','Column','Note']));
+  }
+
+  if(s.natRules.length){
+    const rows = s.natRules.map(r => [
+      r.package.name, r.position, r.rule.uid,
+      (r['rule-columns']||[]).map(c=>`<span class="tag">${escapeHtml(c)}</span>`).join('')
+    ]);
+    const label = mode === 'replicate'
+      ? 'NAT Rules — report only, not auto-modified (cover via group membership instead)'
+      : `NAT Rules — original-source/destination will ${el('decomNatAction').value}, other columns need manual review`;
+    c.appendChild(buildSimpleSection(label, s.natRules.length, rows,
+      ['Package','Rule #','UID','Column(s)'], mode==='replicate'));
+  }
+
+  if(s.threatRules.length){
+    const rows = s.threatRules.map(r => [
+      r.package.name, r.layer ? r.layer.name : '-', r.position,
+      (r['rule-columns']||[]).join(', ')
+    ]);
+    c.appendChild(buildSimpleSection('Threat Prevention Rules — report only, manual review', s.threatRules.length, rows,
+      ['Package','Layer','Rule #','Column(s)'], true));
+  }
+
+  const summary = `
+    <span><b>${s.groups.length}</b> group(s)</span>
+    <span><b>${s.others.length}</b> other object ref(s)</span>
+    <span><b>${s.accessRules.length}</b> access rule(s)</span>
+    <span><b>${s.natRules.length}</b> NAT rule(s)</span>
+    <span><b>${s.threatRules.length}</b> threat rule(s)</span>
+  `;
+  el('summaryBar').innerHTML = summary;
+
+  const total = refCount(whereUsed);
+  el('btnExportCsv').disabled = total === 0;
+  el('btnRemoveObject').classList.toggle('hidden', mode !== 'decom' || total === 0);
+  el('btnReplicate').classList.toggle('hidden', mode !== 'replicate' || total === 0);
+
+  el('actionHint').innerText = mode === 'decom'
+    ? 'Groups and other-object refs are cleared, matching access-rule source/destination entries are removed (or the rule is deleted/disabled if this object is the only entry), and matching NAT original-source/destination entries are handled per your selection above. Threat Prevention and non-standard object refs need manual review.'
+    : `"${currentNewIp}" will be added to the same groups and to source/destination of the same access rules as "${obj.name}". NAT and Threat Prevention references are report-only.`;
 }
 
-async function runSmartEngine() {
-    const reference = document.getElementById('referenceObject').value;
-    const mode = document.getElementById('operationMode').value;
-    const newName = document.getElementById('newName').value;
-    const newIp = document.getElementById('newIp').value;
-    const accessAction = document.getElementById('accessAction').value;
-    const natAction = document.getElementById('natAction').value;
-    const execution = document.getElementById('executionType').value;
+function buildSimpleSection(title, count, rows, headers, reportOnly){
+  const wrap = document.createElement('div');
+  wrap.className = 'section-block';
+  const h = document.createElement('div');
+  h.className = 'section-title' + (reportOnly ? ' report-only' : '');
+  h.innerHTML = `${title} <span class="count">${count}</span>`;
+  wrap.appendChild(h);
 
-    if (!reference) {
-        alert("Please select or enter a valid reference target object.");
-        return;
-    }
+  const scroll = document.createElement('div');
+  scroll.className = 'tbl-scroll';
+  const table = document.createElement('table');
+  table.innerHTML = `
+    <thead><tr>${headers.map(hh=>`<th>${hh}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map(cell=>`<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+  `;
+  scroll.appendChild(table);
+  wrap.appendChild(scroll);
+  return wrap;
+}
 
-    const wrapper = document.getElementById('resultsWrapper');
-    const tbody = document.querySelector('#referencesTable tbody');
-    const logBox = document.getElementById('consoleLog');
-    
-    wrapper.classList.remove('hidden');
-    logBox.innerHTML = "";
-    tbody.innerHTML = '<tr><td colspan="4">Querying database schema internally...</td></tr>';
-    
-    logBox.className = "status-box " + (execution === 'commit' ? 'log-ok' : 'log-dry');
-    logToConsole("SmartConsole Extension Engine activated via inherited session token context.");
+/* ============================================================
+   DECOMMISSION — mirrors remove_from_groups / remove_from_other_objects
+   / remove_from_rules / delete_object / do_publish
+   ============================================================ */
+async function doRemove(){
+  if(!currentWhereUsed || !currentObject) return;
+  const s = splitWhereUsed(currentWhereUsed);
+  if(!confirm(`Remove "${currentObject.name}" from ${s.groups.length} group(s), ${s.accessRules.length} access rule(s) and ${s.natRules.length} NAT rule(s), then delete the object? This matches --commit in decommision_object_v10.sh.`)) return;
 
-    let discoveredRefs = [];
+  setBusy(el('btnRemoveObject'), 'Removing…');
+  const log = [];
+  const soleAction = el('decomSoleAction').value;   // delete | disable
+  const natAction = el('decomNatAction').value;     // delete | disable
 
-    try {
-        // STEP 1: FAST API DUAL TRACK DISCOVERY SEARCH
-        logToConsole(`Initiating multi-tier indexed search query for: '${reference}'`);
-        
-        const hostData = await sendSmartConsoleCommand("show-hosts", { filter: reference, limit: 100, "details-level": "full" });
-        const netData = await sendSmartConsoleCommand("show-networks", { filter: reference, limit: 100, "details-level": "full" });
+  // Groups
+  for(const g of s.groups){
+    await runCommand('set-group-members-remove', { groupName: g.name, member: currentObject.name });
+    log.push({level:'ok', msg:`set group name "${g.name}" members.remove ${currentObject.name}`});
+  }
 
-        // Safeguard fallbacks to keep arrays valid even if one object type yields zero records
-        const hostObjects = (hostData && hostData.objects) ? hostData.objects : [];
-        const netObjects = (netData && netData.objects) ? netData.objects : [];
-        
-        const pooledObjects = [...hostObjects, ...netObjects];
-        
-        if (pooledObjects.length === 0) {
-            logBox.className = "status-box log-warn";
-            throw new Error(`Target Resolution Aborted: Database queries returned zero object matches for context: '${reference}'`);
-        }
+  // Other (non-group) objects — clusters/gateways need manual field identification in the real script
+  for(const o of s.others){
+    log.push({level:'warn', msg:`"${o.name}" (${o.type}) references the object outside groups/rules — needs manual review (matches remove_from_other_objects fallback path).`});
+  }
 
-        const exactMatch = pooledObjects.find(o => o.name === reference || o['ipv4-address'] === reference || o.subnet4 === reference);
-        
-        if (!exactMatch) {
-            logBox.className = "status-box log-warn";
-            throw new Error(`Target Resolution Aborted: Exact structural identity could not be verified for '${reference}'.`);
-        }
-
-        const targetUid = exactMatch.uid;
-        logToConsole(`Verified Active Object: '${exactMatch.name}' [Type: ${exactMatch.type}]`, "success");
-
-        // STEP 2: WHERE-USED SYSTEM MAP PIPELINE
-        logToConsole("Evaluating direct and structural tracking dependency relationships...");
-        const wuData = await sendSmartConsoleCommand("where-used", { uid: targetUid, "indirect-references": true });
-        
-        const usedDirectly = (wuData && wuData["used-directly"]) ? wuData["used-directly"] : {};
-
-        // Parse object tracking vectors
-        if (usedDirectly.objects) {
-            usedDirectly.objects.forEach(obj => {
-                if (['group', 'service-group'].includes(obj.type)) {
-                    discoveredRefs.push({
-                        type: obj.type,
-                        container: obj.name,
-                        details: "Object Structural Member List",
-                        actionTaken: execution === 'commit' ? (mode === 'replication' ? `Injected ${newName}` : `Purged ${exactMatch.name}`) : `Would drop reference allocation inside index list`,
-                        color: execution === 'commit' ? '#16a34a' : '#0284c7'
-                    });
-                    logToConsole(`Group Link discovered inside block element: [${obj.name}]`);
-                }
-            });
-        }
-
-        // Parse policy rule allocations
-        if (usedDirectly['access-control-rules']) {
-            usedDirectly['access-control-rules'].forEach(rule => {
-                const fields = rule['rule-columns'] ? rule['rule-columns'].join('/') : 'Source/Destination';
-                let actionPlan = execution === 'commit' ? `Modified allocation references inside array` : `Would isolate tracking criteria`;
-                
-                if (mode === 'decommission' && accessAction === 'delete') {
-                    actionPlan = execution === 'commit' ? "Rule completely expunged from memory" : "Would drop structural tracking rule entirely";
-                }
-
-                discoveredRefs.push({
-                    type: "Access Control Rule",
-                    container: `Layer Matrix: ${rule.layer.name}`,
-                    details: `Rule Position Reference: #${rule.position} (Field target: ${fields})`,
-                    actionTaken: actionPlan,
-                    color: mode === 'decommission' && accessAction === 'delete' ? '#dc2626' : '#ca8a04'
-                });
-                logToConsole(`Rule Base Dependency Hit: Rule Row Index #${rule.position} inside [${rule.layer.name}]`);
-            });
-        }
-
-        // Parse NAT Rulebase Intersections
-        if (usedDirectly['nat-rules']) {
-            usedDirectly['nat-rules'].forEach(nat => {
-                discoveredRefs.push({
-                    type: "NAT Rule",
-                    container: `Package System: ${nat.package.name}`,
-                    details: `NAT Index Number: #${nat.position}`,
-                    actionTaken: mode === 'replication' ? 'Flagged for Manual Administrative Inspection' : (execution === 'commit' ? `${natAction.toUpperCase()} entry row` : `Would execute fallback ${natAction} protocol`),
-                    color: '#ca8a04'
-                });
-                logToConsole(`NAT Address Translation Reference identified: Rule Alignment #${nat.position}`, "warn");
-            });
-        }
-
-        // Populate table display framework
-        tbody.innerHTML = '';
-        if (discoveredRefs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b;">No active dependencies identified on this object. Isolated component clear for operations.</td></tr>';
+  // Access rules
+  for(const r of s.accessRules){
+    for(const col of (r['rule-columns']||[])){
+      const isSourceOrDest = (col === 'source' || col === 'destination');
+      const members = r._members ? (r._members[col]||[]) : [];
+      const sole = isSourceOrDest && members.length === 1;
+      if(sole){
+        if(soleAction === 'delete'){
+          await runCommand('delete-access-rule', { ruleUid: r.rule.uid, layer: r.layer.name });
+          log.push({level:'warn', msg:`delete access-rule uid ${r.rule.uid} layer "${r.layer.name}" — ${col} would contain only "${currentObject.name}".`});
         } else {
-            discoveredRefs.forEach(ref => {
-                tbody.innerHTML += `<tr>
-                    <td><strong>${ref.type.toUpperCase()}</strong></td>
-                    <td>${ref.container}</td>
-                    <td>${ref.details}</td>
-                    <td><span style="color: ${ref.color}; font-weight: 600;">${ref.actionTaken}</span></td>
-                </tr>`;
-            });
+          await runCommand('set-access-rule-disable', { ruleUid: r.rule.uid, layer: r.layer.name });
+          log.push({level:'warn', msg:`set access-rule uid ${r.rule.uid} layer "${r.layer.name}" enabled false — ${col} would contain only "${currentObject.name}".`});
         }
-
-        document.getElementById('summaryBadge').innerText = `Tracked Dependencies: ${discoveredRefs.length} | Groups: ${discoveredRefs.filter(r => r.type.includes('group')).length} | Rules: ${discoveredRefs.filter(r => !r.type.includes('group')).length}`;
-
-        // STEP 3: EXECUTE MUTATION LIFECYCLE (Only if Commit requested)
-        if (execution === 'commit') {
-            logToConsole("Commit requested. Dispatching write matrix changes down to management server container workspace...");
-            
-            if (mode === 'replication') {
-                logToConsole(`Provisioning target network host element: ${newName} (${newIp})`);
-                await sendSmartConsoleCommand("add-host", { name: newName, "ipv4-address": newIp });
-                logToConsole("New reference structural shell built successfully.");
-            }
-
-            // Fire standard workspace publish tracking
-            logToConsole("Broadcasting API publish request framework down to system databases...");
-            const publishResult = await sendSmartConsoleCommand("publish", {});
-            logToConsole(`Publish transaction committed cleanly. Context ID: ${publishResult ? (publishResult['task-id'] || 'Success') : 'In-line Console Engine'}`, "success");
-        } else {
-            logToConsole("Simulation dry-run finished. Global policy schema unchanged.", "success");
-        }
-
-    } catch (err) {
-        logToConsole(err.message, "error");
-        tbody.innerHTML = `<tr><td colspan="4" style="color:red; font-weight:bold;">Execution Interrupted: ${err.message}</td></tr>`;
+      } else if(isSourceOrDest){
+        await runCommand('set-access-rule-column-remove', { ruleUid: r.rule.uid, layer: r.layer.name, column: col });
+        log.push({level:'ok', msg:`set access-rule uid ${r.rule.uid} layer "${r.layer.name}" ${col}.remove ${currentObject.name}`});
+      } else {
+        log.push({level:'warn', msg:`Rule #${r.position} in "${r.layer.name}": object used in "${col}" — not source/destination, manual review.`});
+      }
     }
+  }
+
+  // NAT rules — only original-source/original-destination are auto-handled
+  for(const r of s.natRules){
+    for(const col of (r['rule-columns']||[])){
+      if(col === 'original-source' || col === 'original-destination'){
+        if(natAction === 'delete'){
+          await runCommand('delete-nat-rule', { ruleUid: r.rule.uid, pkg: r.package.name });
+          log.push({level:'warn', msg:`delete nat-rule uid ${r.rule.uid} package "${r.package.name}" — used in ${col}.`});
+        } else {
+          await runCommand('set-nat-rule-disable', { ruleUid: r.rule.uid, pkg: r.package.name });
+          log.push({level:'warn', msg:`set nat-rule uid ${r.rule.uid} package "${r.package.name}" enabled false — used in ${col}.`});
+        }
+      } else {
+        log.push({level:'warn', msg:`NAT rule #${r.position} in "${r.package.name}": object used in "${col}", not original-source/destination — manual review.`});
+      }
+    }
+  }
+
+  // Threat Prevention — always manual review
+  for(const r of s.threatRules){
+    log.push({level:'warn', msg:`Threat rule #${r.position} in "${r.package.name}" references the object — requires manual review (not auto-modified).`});
+  }
+
+  // Delete the object itself, then publish
+  log.push({level:'ok', msg:`delete ${currentObject.type} name "${currentObject.name}"`});
+  log.push({level:'dim', msg:`publish → task submitted, awaiting completion.`});
+  await runCommand('publish', {});
+
+  showLog(log, `Decommission complete for "${currentObject.name}".`);
+  setBusy(el('btnRemoveObject'), 'Remove Object', false);
+  el('btnRemoveObject').disabled = true;
+}
+
+/* ============================================================
+   REPLICATION — mirrors check_new_object / replicate_groups /
+   replicate_access_rules / create_nat_manual_report / do_publish
+   ============================================================ */
+async function doReplicate(){
+  if(!currentWhereUsed || !currentObject || !currentNewIp) return;
+  const s = splitWhereUsed(currentWhereUsed);
+  if(!confirm(`Add a new object for ${currentNewIp} to ${s.groups.length} group(s) and ${s.accessRules.length} access rule(s), matching "${currentObject.name}"? This matches --commit in replication_script_v2.sh.`)) return;
+
+  setBusy(el('btnReplicate'), 'Replicating…');
+  const log = [];
+
+  // Create or reuse the new host object
+  let newObj = MOCK_DB.objects[currentNewIp];
+  if(!newObj){
+    const name = `srv-app-${currentNewIp.split('.').pop()}`;
+    const result = await runCommand('add-host', { name, ip: currentNewIp });
+    newObj = { name: result.name, type: 'host', uid: result.uid };
+    log.push({level:'ok', msg:`add host name "${name}" ipv4-address ${currentNewIp}`});
+  } else {
+    log.push({level:'dim', msg:`Object for ${currentNewIp} already exists as "${newObj.name}" — reusing it.`});
+  }
+
+  // Groups
+  for(const g of s.groups){
+    await runCommand('set-group-members-add', { groupName: g.name, member: newObj.name });
+    log.push({level:'ok', msg:`set group name "${g.name}" members.add ${newObj.name}`});
+  }
+
+  // Access rules — only source/destination columns are auto-replicated
+  for(const r of s.accessRules){
+    for(const col of (r['rule-columns']||[])){
+      if(col === 'source' || col === 'destination'){
+        await runCommand('set-access-rule-column-add', { ruleUid: r.rule.uid, layer: r.layer.name, column: col });
+        log.push({level:'ok', msg:`set access-rule uid ${r.rule.uid} layer "${r.layer.name}" ${col}.add ${newObj.name}`});
+      } else {
+        log.push({level:'warn', msg:`Rule #${r.position} in "${r.layer.name}": column "${col}" is outside source/destination — report-only.`});
+      }
+    }
+  }
+
+  // NAT + Threat — report-only, never auto-modified
+  s.natRules.forEach(r => log.push({level:'warn', msg:`NAT rule #${r.position} in "${r.package.name}" references the object directly — report-only, not modified (cover via group membership instead).`}));
+  s.threatRules.forEach(r => log.push({level:'warn', msg:`Threat rule #${r.position} in "${r.package.name}" references the object — report-only, not modified.`}));
+
+  log.push({level:'dim', msg:`publish → task submitted, awaiting completion.`});
+  await runCommand('publish', {});
+
+  showLog(log, `Replication complete: ${newObj.name} (${currentNewIp}) added alongside "${currentObject.name}".`);
+  setBusy(el('btnReplicate'), 'Replicate to New Object', false);
+  el('btnReplicate').disabled = true;
+}
+
+function showLog(entries, headline){
+  el('logPanel').classList.remove('hidden');
+  const box = el('logBox');
+  box.innerHTML = '';
+  const head = document.createElement('div');
+  head.innerHTML = `<span class="l-ok">✔</span> <b>${escapeHtml(headline)}</b>`;
+  box.appendChild(head);
+  entries.forEach(e=>{
+    const line = document.createElement('div');
+    const cls = e.level === 'ok' ? 'l-ok' : (e.level === 'warn' ? 'l-warn' : 'l-dim');
+    const icon = e.level === 'ok' ? '✔' : (e.level === 'warn' ? '⚠' : '·');
+    line.innerHTML = `<span class="${cls}">${icon}</span> ${escapeHtml(e.msg)}`;
+    box.appendChild(line);
+  });
+  box.scrollTop = box.scrollHeight;
+  el('logPanel').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function exportCsv(){
+  if(!currentWhereUsed || !currentObject) return;
+  const s = splitWhereUsed(currentWhereUsed);
+  const rows = [['Category','Package','Layer','Rule #','Rule/Group Name','Column(s)/Type','UID']];
+  s.groups.forEach(g => rows.push(['Group','','','', g.name, g.type, g.uid]));
+  s.others.forEach(o => rows.push(['Other Object','','','', o.name, o.type, o.uid]));
+  s.accessRules.forEach(r => rows.push(['Access Rule', r.package.name, r.layer.name, r.position, r.rule.name||'-', (r['rule-columns']||[]).join(';'), r.rule.uid]));
+  s.natRules.forEach(r => rows.push(['NAT Rule', r.package.name, '', r.position, '', (r['rule-columns']||[]).join(';'), r.rule.uid]));
+  s.threatRules.forEach(r => rows.push(['Threat Rule', r.package.name, r.layer?r.layer.name:'', r.position, '', (r['rule-columns']||[]).join(';'), '']));
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `smartops_where-used_${currentObject.name || 'export'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function isValidIp(ip){
+  return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip) && ip.split('.').every(o => Number(o) >= 0 && Number(o) <= 255);
+}
+
+function setBusy(btn, text, busy=true){
+  btn.disabled = busy;
+  btn.innerText = text;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 </script>
 </body>
