@@ -49,7 +49,7 @@
       "show-services-tcp",
       "show-services-udp",
       "show-groups",
-	  "show-access-rule",
+      "show-access-rule",
       "show-nat-rule",
       "show-access-rulebase",
       "show-nat-rulebase",
