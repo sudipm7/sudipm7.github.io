@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Smartops Extension</title>
-    <!-- Check Point Extension API -->
-    <script src="https://context.checkpoint.com/smartconsole/api/v1/smartconsole-api.js"></script>
     <style>
         body {
             font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
@@ -18,7 +16,6 @@
             max-width: 1000px;
             margin: 0 auto;
         }
-        /* Top Navigation Header bar style similar to BulkOps */
         .header-bar {
             background-color: #ffffff;
             border: 1px solid #dcdcdc;
@@ -45,7 +42,6 @@
             font-size: 11px;
             color: #777777;
         }
-        /* Panels matching Step 1, 2, 3 boxes in Bulkops */
         .panel {
             background-color: #ffffff;
             border: 1px solid #d9d9d9;
@@ -104,7 +100,6 @@
             border-color: #da291c;
             outline: none;
         }
-        /* Buttons strictly matched to CP Bulkops design */
         button {
             background-color: #da291c;
             color: white;
@@ -114,7 +109,6 @@
             cursor: pointer;
             border-radius: 3px;
             font-weight: 500;
-            transition: background 0.1s;
         }
         button:hover {
             background-color: #b81d13;
@@ -126,7 +120,6 @@
         }
         button.secondary:hover {
             background-color: #f5f5f5;
-            border-color: #bbbbbb;
         }
         button.danger {
             background-color: #bd362f;
@@ -138,7 +131,6 @@
         .hidden {
             display: none;
         }
-        /* Table Grid Layout styling */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -159,7 +151,6 @@
         tr:hover {
             background-color: #f9f9fb;
         }
-        /* Toast/Status Messaging fields */
         .status-message {
             padding: 10px 14px;
             margin-top: 10px;
@@ -175,8 +166,6 @@
 <body>
 
 <div class="container">
-    
-    <!-- BulkOps Styled Top Navigation Frame -->
     <div class="header-bar">
         <div class="header-title">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#da291c" style="vertical-align: middle;"><path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99z"/></svg>
@@ -185,7 +174,6 @@
         <div class="header-version">v0.1</div>
     </div>
     
-    <!-- Box Section 1: Operation Selection -->
     <div class="panel">
         <div class="panel-header">
             <div class="panel-badge">1</div>
@@ -200,14 +188,12 @@
         </div>
     </div>
 
-    <!-- Box Section 2: Input Parameters Box -->
     <div class="panel">
         <div class="panel-header">
             <div class="panel-badge">2</div>
             <div class="panel-title">Target Parameters</div>
         </div>
         
-        <!-- Object Decommission Target Sub-Form -->
         <div id="decomForm">
             <div class="form-group">
                 <label for="decomIp">Enter the IP address of the object to decommission:</label>
@@ -216,7 +202,6 @@
             <button onclick="searchObjectUsage('decom')">Search Object Usage</button>
         </div>
 
-        <!-- Rule Replication Target Sub-Form -->
         <div id="replicaForm" class="hidden">
             <div class="form-group">
                 <label for="existingIp">Existing Object IP:</label>
@@ -227,11 +212,9 @@
             <button onclick="searchObjectUsage('replica')">Search Existing Policies</button>
         </div>
 
-        <!-- Status Notification Box inside Panel 2 context -->
         <div id="statusIndicator" class="status-message hidden"></div>
     </div>
 
-    <!-- Box Section 3: Analysis Results Grid -->
     <div id="resultsPanel" class="panel hidden">
         <div class="panel-header">
             <div class="panel-badge">3</div>
@@ -250,13 +233,13 @@
                         <th>Package / Layer</th>
                         <th>Rule ID</th>
                         <th>Name / Type</th>
-                        <th>Source</th>
-                        <th>Destination</th>
+                        <th>Source Reference</th>
+                        <th>Destination Reference</th>
                         <th>Service</th>
                     </tr>
                 </thead>
                 <tbody id="usageTableBody">
-                    <!-- Dynamic injection -->
+                    <!-- Dynamic Rows -->
                 </tbody>
             </table>
         </div>
@@ -264,21 +247,79 @@
 </div>
 
 <script>
-    // Global State Elements
     let discoveredUsage = [];
     let targetObjectUid = "";
     let targetObjectName = "";
-    let newObjectUid = "";
     let currentOp = "decom";
 
-    document.addEventListener("DOMContentLoaded", function() {
-        if (typeof smConnect === "function") smConnect();
+    // --- NATIVE EMBEDDED CHECK POINT HANDSHAKE ENGINE (OFFLINE FRIENDLY) ---
+    let queryIdCount = 1;
+    const pendingRequests = {};
+    let isSmartConsoleConnected = false;
+
+    window.addEventListener("message", function(event) {
+        if (!event.data || typeof event.data !== "object") return;
+        
+        // Check for initialization signal from SmartConsole frame container
+        if (event.data.action === "init") {
+            isSmartConsoleConnected = true;
+            console.log("Successfully handshaked with SmartConsole frame.");
+            return;
+        }
+
+        // Match returning execution call queries
+        if (event.data.queryId && pendingRequests[event.data.queryId]) {
+            const promiseHandler = pendingRequests[event.data.queryId];
+            delete pendingRequests[event.data.queryId];
+            
+            if (event.data.status === "Success") {
+                promiseHandler.resolve(event.data.output);
+            } else {
+                promiseHandler.reject(new Error(event.data.message || "SmartConsole management API returned error status."));
+            }
+        }
     });
+
+    // Send a message up to SmartConsole to announce frame readiness
+    function initSmartConsoleHandshake() {
+        window.parent.postMessage({ action: "started" }, "*");
+    }
+    setTimeout(initSmartConsoleHandshake, 500);
+
+    function runSmartConsoleCmd(command, payload) {
+        return new Promise((resolve, reject) => {
+            if (!isSmartConsoleConnected) {
+                // True offline/fallback debug simulator if checked inside a basic standard web browser
+                console.warn("SmartConsole frame channel not detected. Using local simulator view.");
+                setTimeout(() => {
+                    if (command === "show-hosts") {
+                        resolve({ objects: [{ name: "Simulated_Host", uid: "sim-uid-123", "ipv4-address": payload.filter }] });
+                    } else if (command === "where-used") {
+                        resolve({
+                            "used-directly": { "objects": [{ name: "Corporate_Rulebase", type: "access-rule", uid: "r-1", layer: "Network", package: "Standard", ruleIndex: 44 }] },
+                            "used-indirectly": { "objects": [{ name: "Database_Group", type: "group", uid: "g-1", package: "Standard" }] }
+                        });
+                    } else { resolve({ status: "Success" }); }
+                }, 600);
+                return;
+            }
+
+            const currentQueryId = "query_" + (queryIdCount++);
+            pendingRequests[currentQueryId] = { resolve, reject };
+
+            window.parent.postMessage({
+                action: "execute-command",
+                command: command,
+                parameters: payload,
+                queryId: currentQueryId
+            }, "*");
+        });
+    }
+    // --- END HANDSHAKE ENGINE ---
 
     function toggleOperationFields() {
         const op = document.getElementById("operationSelect").value;
         currentOp = op;
-        
         document.getElementById("resultsPanel").classList.add("hidden");
         document.getElementById("statusIndicator").classList.add("hidden");
         discoveredUsage = [];
@@ -310,7 +351,7 @@
             return;
         }
 
-        showStatus("Fetching network entities and referencing rules...", "loading");
+        showStatus("Connecting to Management API and searching rule bases...", "loading");
         document.getElementById("resultsPanel").classList.add("hidden");
         discoveredUsage = [];
 
@@ -328,16 +369,15 @@
             const usageData = await runSmartConsoleCmd("where-used", { "object": targetObjectUid, "indirect-usage": true });
             processUsageResults(usageData);
         } catch (err) {
-            showStatus("API Error execution failure: " + err.message, "error");
+            showStatus("API Error: " + err.message, "error");
         }
     }
 
-function processUsageResults(data) {
+    function processUsageResults(data) {
         const tbody = document.getElementById("usageTableBody");
         tbody.innerHTML = "";
         discoveredUsage = [];
 
-        // 1. EXTRACT DIRECT USAGE (Host object placed directly in rules or groups)
         if (data["used-directly"] && data["used-directly"]["objects"]) {
             data["used-directly"]["objects"].forEach(item => {
                 discoveredUsage.push({
@@ -348,18 +388,14 @@ function processUsageResults(data) {
                     package: item.package || "Global/Group",
                     ruleId: item.ruleIndex !== undefined ? item.ruleIndex : "N/A",
                     source: item.type === "access-rule" ? "Direct Match" : "Group Member",
-                    destination: item.type === "access-rule" ? "Direct Match" : "Group Member",
-                    service: "Any"
+                    destination: item.type === "access-rule" ? "Direct Match" : "Group Member"
                 });
             });
         }
 
-        // 2. EXTRACT INDIRECT USAGE (This catches group memberships and rules using those groups)
         if (data["used-indirectly"] && data["used-indirectly"]["objects"]) {
             data["used-indirectly"]["objects"].forEach(item => {
-                // To avoid duplicate rows if something is caught twice
                 const isDuplicate = discoveredUsage.some(existing => existing.uid === item.uid);
-                
                 if (!isDuplicate) {
                     discoveredUsage.push({
                         uid: item.uid,
@@ -368,21 +404,18 @@ function processUsageResults(data) {
                         layer: item.layer || "N/A",
                         package: item.package || "Global/Nested Group",
                         ruleId: item.ruleIndex !== undefined ? item.ruleIndex : "N/A",
-                        source: "Via Group/NAT Dependency",
-                        destination: "Via Group/NAT Dependency",
-                        service: "Any"
+                        source: "Nested in Group / Dependency",
+                        destination: "Nested in Group / Dependency"
                     });
                 }
             });
         }
 
-        // Drop out gracefully if completely unused across the database architecture
         if (discoveredUsage.length === 0) {
-            showStatus(`Object (${targetObjectName}) found but is not referenced inside any rules, groups, or NAT policies.`, "success");
+            showStatus(`Object (${targetObjectName}) found but is completely clean (not used anywhere).`, "success");
             return;
         }
 
-        // Render Table Display Rows
         discoveredUsage.forEach(row => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -391,7 +424,7 @@ function processUsageResults(data) {
                 <td><b>${escapeHtml(row.name)}</b><br><small style="color:#da291c;">Type: ${escapeHtml(row.type)}</small></td>
                 <td><span style="font-size:11px; color:#555;">${escapeHtml(row.source)}</span></td>
                 <td><span style="font-size:11px; color:#555;">${escapeHtml(row.destination)}</span></td>
-                <td>${escapeHtml(row.service)}</td>
+                <td>Any</td>
             `;
             tbody.appendChild(tr);
         });
@@ -401,7 +434,7 @@ function processUsageResults(data) {
     }
 
     async function executeAction() {
-        showStatus("Processing batch transaction structural updates...", "loading");
+        showStatus("Processing updates on Management Server...", "loading");
         try {
             if (currentOp === "decom") {
                 for (let i = 0; i < discoveredUsage.length; i++) {
@@ -425,7 +458,7 @@ function processUsageResults(data) {
                     }
                 }
                 await runSmartConsoleCmd("delete-host", { "uid": targetObjectUid });
-                showStatus("Decommissioning operations completed successfully. Review and Publish in SmartConsole.", "success");
+                showStatus("Decommissioning finished! Review your changes and Publish them in SmartConsole.", "success");
             } else {
                 const newIpStr = document.getElementById("newIp").value;
                 if (!newIpStr) {
@@ -454,11 +487,11 @@ function processUsageResults(data) {
                         await runSmartConsoleCmd("set-group", { "uid": ref.uid, "members": { "add": newObjName } });
                     }
                 }
-                showStatus("Replication modifications complete! Verify results and click Publish.", "success");
+                showStatus("Replication complete! Review your changes and click Publish.", "success");
             }
             document.getElementById("resultsPanel").classList.add("hidden");
         } catch (ex) {
-            showStatus("Failure performing policy transaction adjustments: " + ex.message, "error");
+            showStatus("Failure performing adjustments: " + ex.message, "error");
         }
     }
 
@@ -474,28 +507,6 @@ function processUsageResults(data) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    }
-
-    function runSmartConsoleCmd(command, payload) {
-        return new Promise((resolve, reject) => {
-            if (typeof API === "undefined" || !API.ExecuteCommand) {
-                setTimeout(() => {
-                    if (command === "show-hosts") {
-                        resolve({ objects: [{ name: "H_192_168_1_50", uid: "mock-123", ip: payload.filter }] });
-                    } else if (command === "where-used") {
-                        resolve({ "used-directly": { "objects": [
-                            { name: "Standard_Access", type: "access-rule", uid: "rule-1", layer: "Network", package: "Standard", ruleIndex: 12 },
-                            { name: "Internal_Subnets", type: "group", uid: "group-1" }
-                        ]}});
-                    } else { resolve({ status: "Success", mock: true }); }
-                }, 800);
-                return;
-            }
-            API.ExecuteCommand(command, payload, function(result) {
-                if (result.Status === "Success") resolve(result.Output);
-                else reject(new Error(result.Message || "SmartConsole API error."));
-            });
-        });
     }
 
     function escapeHtml(str) {
