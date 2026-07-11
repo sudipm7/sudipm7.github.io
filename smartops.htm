@@ -129,7 +129,7 @@
 window.addEventListener("message", function(event) {
     if (event.data && event.data.action === "init") {
         // Automatically fetch selected object name if available
-        const objects = event.data.context.objects;
+        const objects = event.data.context ? event.data.context.objects : null;
         if (objects && objects.length > 0) {
             document.getElementById("referenceObject").value = objects[0].name;
             logToConsole(`SmartConsole Context Hook: Auto-selected target '${objects[0].name}'`);
@@ -165,14 +165,18 @@ function logToConsole(message, type = 'info') {
 
 // Helper engine function to talk to SmartConsole native API container proxy
 function sendSmartConsoleCommand(command, parameters) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const requestId = Math.random().toString(36).substring(7);
         
         // Setup listener callback wrapper for this specific api thread sequence
         const responseHandler = function(event) {
             if (event.data && event.data.requestId === requestId) {
                 window.removeEventListener("message", responseHandler);
-                resolve(event.data.response);
+                
+                // CRITICAL FIX: Unpacking the native SmartConsole extension API payload structure
+                // SmartConsole passes data back wrapped inside event.data.result or event.data.response
+                const apiResponse = event.data.result || event.data.response || event.data;
+                resolve(apiResponse);
             }
         };
         window.addEventListener("message", responseHandler);
@@ -221,7 +225,17 @@ async function runSmartEngine() {
         const hostData = await sendSmartConsoleCommand("show-hosts", { filter: reference, limit: 100, "details-level": "full" });
         const netData = await sendSmartConsoleCommand("show-networks", { filter: reference, limit: 100, "details-level": "full" });
 
-        const pooledObjects = [...(hostData.objects || []), ...(netData.objects || [])];
+        // Safeguard fallbacks to keep arrays valid even if one object type yields zero records
+        const hostObjects = (hostData && hostData.objects) ? hostData.objects : [];
+        const netObjects = (netData && netData.objects) ? netData.objects : [];
+        
+        const pooledObjects = [...hostObjects, ...netObjects];
+        
+        if (pooledObjects.length === 0) {
+            logBox.className = "status-box log-warn";
+            throw new Error(`Target Resolution Aborted: Database queries returned zero object matches for context: '${reference}'`);
+        }
+
         const exactMatch = pooledObjects.find(o => o.name === reference || o['ipv4-address'] === reference || o.subnet4 === reference);
         
         if (!exactMatch) {
@@ -235,7 +249,8 @@ async function runSmartEngine() {
         // STEP 2: WHERE-USED SYSTEM MAP PIPELINE
         logToConsole("Evaluating direct and structural tracking dependency relationships...");
         const wuData = await sendSmartConsoleCommand("where-used", { uid: targetUid, "indirect-references": true });
-        const usedDirectly = wuData["used-directly"] || {};
+        
+        const usedDirectly = (wuData && wuData["used-directly"]) ? wuData["used-directly"] : {};
 
         // Parse object tracking vectors
         if (usedDirectly.objects) {
@@ -260,7 +275,7 @@ async function runSmartEngine() {
                 let actionPlan = execution === 'commit' ? `Modified allocation references inside array` : `Would isolate tracking criteria`;
                 
                 if (mode === 'decommission' && accessAction === 'delete') {
-                    actionPlan = execution === 'commit' ? "Rule base line completely expunged from memory" : "Would drop structural tracking rule entirely";
+                    actionPlan = execution === 'commit' ? "Rule completely expunged from memory" : "Would drop structural tracking rule entirely";
                 }
 
                 discoveredRefs.push({
@@ -318,7 +333,7 @@ async function runSmartEngine() {
             // Fire standard workspace publish tracking
             logToConsole("Broadcasting API publish request framework down to system databases...");
             const publishResult = await sendSmartConsoleCommand("publish", {});
-            logToConsole(`Publish transaction committed cleanly. Context ID: ${publishResult['task-id'] || 'In-line Console Engine'}`, "success");
+            logToConsole(`Publish transaction committed cleanly. Context ID: ${publishResult ? (publishResult['task-id'] || 'Success') : 'In-line Console Engine'}`, "success");
         } else {
             logToConsole("Simulation dry-run finished. Global policy schema unchanged.", "success");
         }
