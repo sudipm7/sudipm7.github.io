@@ -1,0 +1,69 @@
+{
+  "extension": {
+    "name": "SmartOPs",
+    "version": "1.0",
+    "description": "SmartConsole Extension to perform object decommision and replication from global pane",
+    "author": "Sudip",
+    "email": "sudipm7@gmail.com",
+    "product-url": "https://community.checkpoint.com/",
+    "provider": "sudipm7.github.io",
+    "extension-version-requirements": {
+      "minimum-version": "1.3"
+    }
+  },
+  "client-extensions-api": {
+    "version": "1.3"
+  },
+  "management-server-api": {
+    "version": "1.3"
+  },
+  "locations": [
+    {
+      "location": "global-pane",
+      "relevant-types": ["*"],
+      "ui-element": {
+        "type": "tab",
+        "caption": "Audit",
+        "tooltip": "Smart Ops",
+        "action": {
+          "details-level": "full",
+          "method": "get",
+          "trigger-id": "smartops-globalpane",
+          "disable-automatic-refresh": true,
+          "url": "smartops.htm"
+        }
+      }
+    }
+  ],
+  "requested-permissions": {
+    "client": [
+	"get-read-only-session", 
+	"run-read-only-commands",
+	"get-read-write-session", 
+	"run-read-write-commands"
+	],
+	"pre-approved-commands": [
+      "show-hosts",
+      "show-networks",
+      "show-address-ranges",
+      "show-services-tcp",
+      "show-services-udp",
+      "show-groups",
+      "add-objects-batch",
+      "set-objects-batch",
+      "add-host",
+      "add-network",
+      "add-address-range",
+      "add-service-tcp",
+      "add-service-udp",
+      "add-group",
+      "set-host",
+      "set-network",
+      "set-address-range",
+      "set-service-tcp",
+      "set-service-udp",
+      "set-group",
+      "add-tag"
+    ]
+  }
+}
