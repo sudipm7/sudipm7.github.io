@@ -252,18 +252,19 @@
     let targetObjectName = "";
     let currentOp = "decom";
 
-    // --- NATIVE EMBEDDED CHECK POINT HANDSHAKE ENGINE (OFFLINE FRIENDLY) ---
+    // --- RELIABLE CHECK POINT HANDSHAKE ENGINE ---
     let queryIdCount = 1;
     const pendingRequests = {};
     let isSmartConsoleConnected = false;
 
+    // Listen for SmartConsole ready messages
     window.addEventListener("message", function(event) {
         if (!event.data || typeof event.data !== "object") return;
         
-        // Check for initialization signal from SmartConsole frame container
-        if (event.data.action === "init") {
+        // Handle init handshake variations across R8x versions
+        if (event.data.action === "init" || event.data.type === "init") {
             isSmartConsoleConnected = true;
-            console.log("Successfully handshaked with SmartConsole frame.");
+            console.log("Connected to SmartConsole container.");
             return;
         }
 
@@ -272,25 +273,33 @@
             const promiseHandler = pendingRequests[event.data.queryId];
             delete pendingRequests[event.data.queryId];
             
-            if (event.data.status === "Success") {
-                promiseHandler.resolve(event.data.output);
+            if (event.data.status === "Success" || event.data.status === true) {
+                promiseHandler.resolve(event.data.output || event.data.result);
             } else {
-                promiseHandler.reject(new Error(event.data.message || "SmartConsole management API returned error status."));
+                promiseHandler.reject(new Error(event.data.message || "SmartConsole API error execution status."));
             }
         }
     });
 
-    // Send a message up to SmartConsole to announce frame readiness
+    // Notify the parent SmartConsole frame that this extension has loaded
     function initSmartConsoleHandshake() {
-        window.parent.postMessage({ action: "started" }, "*");
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ action: "started" }, "*");
+            window.parent.postMessage({ type: "started" }, "*");
+            // Force connectivity to true if we are running nested inside an iframe inside SmartConsole
+            isSmartConsoleConnected = true; 
+        }
     }
-    setTimeout(initSmartConsoleHandshake, 500);
+    
+    // Trigger immediately and fallback check
+    initSmartConsoleHandshake();
+    setTimeout(initSmartConsoleHandshake, 200);
 
     function runSmartConsoleCmd(command, payload) {
         return new Promise((resolve, reject) => {
-            if (!isSmartConsoleConnected) {
-                // True offline/fallback debug simulator if checked inside a basic standard web browser
-                console.warn("SmartConsole frame channel not detected. Using local simulator view.");
+            // If running in a standard browser window completely outside of SmartConsole
+            if (!isSmartConsoleConnected && window.parent === window) {
+                console.warn("SmartConsole framework not detected. Using local simulator view.");
                 setTimeout(() => {
                     if (command === "show-hosts") {
                         resolve({ objects: [{ name: "Simulated_Host", uid: "sim-uid-123", "ipv4-address": payload.filter }] });
@@ -307,6 +316,7 @@
             const currentQueryId = "query_" + (queryIdCount++);
             pendingRequests[currentQueryId] = { resolve, reject };
 
+            // Dispatch command across the iframe context
             window.parent.postMessage({
                 action: "execute-command",
                 command: command,
